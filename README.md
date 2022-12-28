@@ -30,6 +30,12 @@ console.log(ContentManager.progress); // something like 0.5 or 1
 console.log(ContentManager.status); // 0: Idle, 1: Loading, 2: Loaded
 ```
 
+Fetch a content asset:
+
+```ts
+const item = ContentManager.get('my-item-1');
+```
+
 ## Options
 
 ```ts
