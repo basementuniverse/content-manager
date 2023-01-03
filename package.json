@@ -10,6 +10,10 @@
   },
   "author": "Gordon Larrigan <gordonlarrigan@gmail.com> (https://gordonlarrigan.com)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/basementuniverse/content-manager.git"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "@types/node": "^18.11.12",
