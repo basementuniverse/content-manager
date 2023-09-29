@@ -26,7 +26,7 @@ ContentManager.load([
 
 Check content manager progress and status:
 ```ts
-console.log(ContentManager.progress); // something like 0.5 or 1
+console.log(ContentManager.progress); // a number between 0 (nothing loaded yet) and 1 (finished loading)
 console.log(ContentManager.status); // 0: Idle, 1: Loading, 2: Loaded
 ```
 
