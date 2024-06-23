@@ -24,6 +24,8 @@ ContentManager.load([
 ]);
 ```
 
+_Note: when using the "json" or "text" loaders, the argument can either be a URL to the content or the content itself._
+
 Check content manager progress and status:
 ```ts
 console.log(ContentManager.progress); // a number between 0 (nothing loaded yet) and 1 (finished loading)
@@ -61,6 +63,7 @@ The following loaders are registered by default:
   "font": FontLoader,
   "image": ImageLoader,
   "audio": AudioLoader,
+  "text": TextLoader,
 }
 ```
 

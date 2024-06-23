@@ -1,8 +1,9 @@
 import {
-  JSONLoader,
+  AudioLoader,
   FontLoader,
   ImageLoader,
-  AudioLoader
+  JSONLoader,
+  TextLoader,
 } from './content-loaders';
 
 export type ContentManagerOptions = {
@@ -15,6 +16,7 @@ export type ContentManagerOptions = {
    * - `font` for loading fonts into `document.fonts`, returns a FontFace
    * - `image` for loading images, returns an HTMLImageElement
    * - `audio` for loading audio, returns an HTMLAudioElement
+   * - `text` for loading plain tet data (either from URL or inline)
    */
   loaders: ContentLoaderMap;
 
@@ -52,6 +54,7 @@ export enum ContentItemType {
   Font = 'font',
   Image = 'image',
   Audio = 'audio',
+  Text = 'text',
 }
 
 export enum ContentManagerStatus {
@@ -90,6 +93,7 @@ const defaultContentLoaders: ContentLoaderMap = {
   [ContentItemType.Font]: FontLoader,
   [ContentItemType.Image]: ImageLoader,
   [ContentItemType.Audio]: AudioLoader,
+  [ContentItemType.Text]: TextLoader,
 };
 
 async function sleep(ms: number): Promise<void> {
@@ -126,14 +130,14 @@ export default class ContentManager {
   private constructor(options?: Partial<ContentManagerOptions>) {
     this.options = Object.assign(
       {},
+      ContentManager.defaultOptions,
+      options ?? {},
       {
-        ...ContentManager.defaultOptions,
         loaders: {
           ...ContentManager.defaultOptions.loaders,
           ...(options?.loaders ?? {}),
         },
       },
-      options ?? {}
     );
   }
 

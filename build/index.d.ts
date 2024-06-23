@@ -8,6 +8,7 @@ export type ContentManagerOptions = {
      * - `font` for loading fonts into `document.fonts`, returns a FontFace
      * - `image` for loading images, returns an HTMLImageElement
      * - `audio` for loading audio, returns an HTMLAudioElement
+     * - `text` for loading plain tet data (either from URL or inline)
      */
     loaders: ContentLoaderMap;
     /**
@@ -39,7 +40,8 @@ export declare enum ContentItemType {
     JSON = "json",
     Font = "font",
     Image = "image",
-    Audio = "audio"
+    Audio = "audio",
+    Text = "text"
 }
 export declare enum ContentManagerStatus {
     Idle = 0,
