@@ -12,6 +12,10 @@ export type ContentManagerOptions = {
      */
     loaders: ContentLoaderMap;
     /**
+     * A dictionary of content processor functions
+     */
+    processors?: ContentProcessorMap;
+    /**
      * If true, simulate each content item taking some time to load
      *
      * Default is false
@@ -30,6 +34,26 @@ export type ContentManagerOptions = {
      */
     slowLoadingTimeMax?: number;
     /**
+     * If true, simulate each content item taking some time to process
+     *
+     * Default is false
+     */
+    simulateSlowProcessing?: boolean;
+    /**
+     * Minimum amount of time for processing an item when simulating slow
+     * processing
+     *
+     * Default is 1000
+     */
+    slowProcessingTimeMin?: number;
+    /**
+     * Maximum amount of time for processing an item when simulating slow
+     * processing
+     *
+     * Default is 3000
+     */
+    slowProcessingTimeMax?: number;
+    /**
      * Should we throw an error when a requested content item is not found?
      *
      * Default is true
@@ -46,17 +70,25 @@ export declare enum ContentItemType {
 export declare enum ContentManagerStatus {
     Idle = 0,
     Loading = 1,
-    Loaded = 2
+    Processing = 2,
+    Ready = 3
 }
 export declare enum ContentItemStatus {
     Idle = 0,
     Loading = 1,
-    Loaded = 2
+    Loaded = 2,
+    Processing = 3,
+    Processed = 4
 }
 export type ContentListItem = {
     name: string;
     type: ContentItemType | string;
     args: any[];
+    processors?: ContentProcessorListItem[];
+};
+export type ContentProcessorListItem = {
+    name: string;
+    args?: any[];
 };
 export type ContentItem<T = any> = {
     name: string;
@@ -68,11 +100,17 @@ export type ContentLoader = <T>(...args: any[]) => Promise<T>;
 export type ContentLoaderMap = {
     [key in ContentItemType | string]: ContentLoader;
 };
+export type ContentProcessor = <T = any>(content: Record<string, ContentItem>, item: ContentItem<T>, ...args: any[]) => Promise<void>;
+export type ContentProcessorMap = {
+    [key: string]: ContentProcessor;
+};
 export default class ContentManager {
     private static instance;
     private static readonly defaultOptions;
     private options;
     private currentContentList;
+    private currentProgress;
+    private currentTotalProgress;
     private content;
     private status;
     private constructor();
@@ -80,6 +118,7 @@ export default class ContentManager {
      * Initialise the content manager and provide configuration options
      */
     static initialise(options?: Partial<ContentManagerOptions>): void;
+    static dispose(): void;
     private static getInstance;
     /**
      * Current loading progress, represented as a unit scalar [0, 1]
@@ -93,8 +132,8 @@ export default class ContentManager {
     /**
      * Load content items
      *
-     * Existing content items will be retained, and any content items that already exist
-     * will be re-loaded
+     * Existing content items will be retained, and any content items which
+     * already exist will be re-loaded
      */
     static load(items?: ContentListItem[]): Promise<void>;
     /**

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "basementuniverse",
+    "type": "image",
+    "args": ["./content/basementuniverse.png"]
+  },
+  {
+    "name": "test-text-1",
+    "type": "text",
+    "args": ["./test/test-text-1.txt"]
+  },
+  {
+    "name": "test-text-2",
+    "type": "text",
+    "args": ["http://localhost:8080/test/test-text-2.txt"]
+  },
+  {
+    "name": "test-text-3",
+    "type": "text",
+    "args": ["This is a test string"]
+  },
+  {
+    "name": "test-data-1",
+    "type": "json",
+    "args": ["./test/test-data-1.json"]
+  },
+  {
+    "name": "test-data-2",
+    "type": "json",
+    "args": ["http://localhost:8080/test/test-data-2.json"]
+  },
+  {
+    "name": "test-data-3",
+    "type": "json",
+    "args": [
+      {
+        "a": 1,
+        "b": 2
+      }
+    ]
+  }
+]

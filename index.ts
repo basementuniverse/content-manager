@@ -5,6 +5,9 @@ import {
   JSONLoader,
   TextLoader,
 } from './content-loaders';
+import {
+  ImageNameProcessor,
+} from './content-processors';
 
 export type ContentManagerOptions = {
   /**
@@ -19,6 +22,11 @@ export type ContentManagerOptions = {
    * - `text` for loading plain tet data (either from URL or inline)
    */
   loaders: ContentLoaderMap;
+
+  /**
+   * A dictionary of content processor functions
+   */
+  processors?: ContentProcessorMap;
 
   /**
    * If true, simulate each content item taking some time to load
@@ -42,6 +50,29 @@ export type ContentManagerOptions = {
   slowLoadingTimeMax?: number;
 
   /**
+   * If true, simulate each content item taking some time to process
+   *
+   * Default is false
+   */
+  simulateSlowProcessing?: boolean;
+
+  /**
+   * Minimum amount of time for processing an item when simulating slow
+   * processing
+   *
+   * Default is 1000
+   */
+  slowProcessingTimeMin?: number;
+
+  /**
+   * Maximum amount of time for processing an item when simulating slow
+   * processing
+   *
+   * Default is 3000
+   */
+  slowProcessingTimeMax?: number;
+
+  /**
    * Should we throw an error when a requested content item is not found?
    *
    * Default is true
@@ -60,19 +91,28 @@ export enum ContentItemType {
 export enum ContentManagerStatus {
   Idle = 0,
   Loading,
-  Loaded
+  Processing,
+  Ready
 }
 
 export enum ContentItemStatus {
   Idle = 0,
   Loading,
-  Loaded
+  Loaded,
+  Processing,
+  Processed
 }
 
 export type ContentListItem = {
   name: string;
   type: ContentItemType | string;
   args: any[];
+  processors?: ContentProcessorListItem[];
+};
+
+export type ContentProcessorListItem = {
+  name: string;
+  args?: any[];
 };
 
 export type ContentItem<T = any> = {
@@ -88,12 +128,26 @@ export type ContentLoaderMap = {
   [key in ContentItemType | string]: ContentLoader;
 };
 
+export type ContentProcessor = <T = any>(
+  content: Record<string, ContentItem>,
+  item: ContentItem<T>,
+  ...args: any[]
+) => Promise<void>;
+
+export type ContentProcessorMap = {
+  [key: string]: ContentProcessor;
+};
+
 const defaultContentLoaders: ContentLoaderMap = {
   [ContentItemType.JSON]: JSONLoader,
   [ContentItemType.Font]: FontLoader,
   [ContentItemType.Image]: ImageLoader,
   [ContentItemType.Audio]: AudioLoader,
   [ContentItemType.Text]: TextLoader,
+};
+
+const defaultContentProcessors: ContentProcessorMap = {
+  imageName: ImageNameProcessor,
 };
 
 async function sleep(ms: number): Promise<void> {
@@ -108,20 +162,24 @@ function randomBetween(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-const MIN_SIMULATED_LOADING_TIME = 1000;
-
-const MAX_SIMULATED_LOADING_TIME = 3000;
+const MIN_SLEEP_TIME = 1000;
+const MAX_SLEEP_TIME = 3000;
 
 export default class ContentManager {
-  private static instance: ContentManager;
+  private static instance: ContentManager | undefined;
 
   private static readonly defaultOptions: ContentManagerOptions = {
     loaders: defaultContentLoaders,
+    processors: defaultContentProcessors,
   };
 
   private options: ContentManagerOptions;
 
   private currentContentList: ContentListItem[] = [];
+
+  private currentProgress: number = 0;
+
+  private currentTotalProgress: number = 0;
 
   private content: Record<string, ContentItem> = {};
 
@@ -137,6 +195,10 @@ export default class ContentManager {
           ...ContentManager.defaultOptions.loaders,
           ...(options?.loaders ?? {}),
         },
+        processors: {
+          ...(ContentManager.defaultOptions.processors ?? {}),
+          ...(options?.processors ?? {}),
+        },
       },
     );
   }
@@ -148,7 +210,16 @@ export default class ContentManager {
     if (ContentManager.instance !== undefined) {
       throw new Error('Content manager already initialised');
     }
+
     ContentManager.instance = new ContentManager(options);
+  }
+
+  public static dispose() {
+    if (ContentManager.instance === undefined) {
+      throw new Error('Content manager not initialised');
+    }
+
+    delete ContentManager.instance;
   }
 
   private static getInstance(): ContentManager {
@@ -178,23 +249,18 @@ export default class ContentManager {
   }
 
   private getProgress(): number {
-    if (!this.currentContentList.length) {
+    if (!this.currentContentList.length || this.currentTotalProgress === 0) {
       return 1;
     }
 
-    const names = this.currentContentList.map(item => item.name);
-    const loaded = Object.entries(this.content).filter(
-      ([name, item]) => names.includes(name) && item.status === ContentItemStatus.Loaded
-    );
-
-    return clamp(loaded.length / this.currentContentList.length);
+    return clamp(this.currentProgress / this.currentTotalProgress);
   }
 
   /**
    * Load content items
    *
-   * Existing content items will be retained, and any content items that already exist
-   * will be re-loaded
+   * Existing content items will be retained, and any content items which
+   * already exist will be re-loaded
    */
   public static async load(items?: ContentListItem[]): Promise<void> {
     if (!items || items.length === 0) {
@@ -211,18 +277,29 @@ export default class ContentManager {
     }
 
     instance.currentContentList = items;
+
+    // Calculate how many tasks we need to perform
+    const countTotalToLoad = items.length;
+    const countTotalToProcess = items.reduce(
+      (a, c) => a + (c.processors ?? []).length,
+      0
+    );
+
+    instance.currentProgress = 0;
+    instance.currentTotalProgress = countTotalToLoad + countTotalToProcess;
+
+    // Load items
     instance.status = ContentManagerStatus.Loading;
-
     for (const item of items) {
-      if (instance.options.simulateSlowLoading) {
-        await sleep(randomBetween(
-          instance.options.slowLoadingTimeMin ?? MIN_SIMULATED_LOADING_TIME,
-          instance.options.slowLoadingTimeMax ?? MAX_SIMULATED_LOADING_TIME
-        ));
-      }
-
       if (!(item.type in instance.options.loaders)) {
         throw new Error(`No content loader defined for type "${item.type}"`);
+      }
+
+      if (instance.options.simulateSlowLoading) {
+        await sleep(randomBetween(
+          instance.options.slowLoadingTimeMin ?? MIN_SLEEP_TIME,
+          instance.options.slowLoadingTimeMax ?? MAX_SLEEP_TIME
+        ));
       }
 
       const contentItem = {
@@ -232,11 +309,67 @@ export default class ContentManager {
         status: ContentItemStatus.Loading,
       };
       instance.content[item.name] = contentItem;
-      contentItem.content = await instance.options.loaders[item.type](...item.args);
+      contentItem.content = await instance.options.loaders[item.type](
+        ...item.args
+      );
+
       contentItem.status = ContentItemStatus.Loaded;
+      instance.currentProgress++;
     }
 
-    instance.status = ContentManagerStatus.Loaded;
+    // Process items
+    instance.status = ContentManagerStatus.Processing;
+    for (const item of items) {
+      if (!item.processors || item.processors.length === 0) {
+        continue;
+      }
+
+      if (
+        !instance.options.processors ||
+        Object.keys(instance.options.processors).length === 0
+      ) {
+        throw new Error('No content processors defined');
+      }
+
+      const contentItem = instance.content[item.name];
+
+      if (!contentItem) {
+        // We should never reach this point; the item will have been loaded
+        // and added to the instance's content dictionary... but just in case
+        throw new Error(
+          `Cannot find item with name "${item.name}"`
+        );
+      }
+
+      if (instance.options.simulateSlowProcessing) {
+        await sleep(randomBetween(
+          instance.options.slowProcessingTimeMin ?? MIN_SLEEP_TIME,
+          instance.options.slowProcessingTimeMax ?? MAX_SLEEP_TIME
+        ));
+      }
+
+      contentItem.status = ContentItemStatus.Processing;
+
+      for (const processor of item.processors) {
+        if (!(processor.name in instance.options.processors)) {
+          throw new Error(
+            `No content processor defined with name "${processor.name}"`
+          );
+        }
+
+        await instance.options.processors[processor.name](
+          instance.content,
+          contentItem,
+          ...(processor.args ?? [])
+        );
+
+        instance.currentProgress++;
+      }
+
+      contentItem.status = ContentItemStatus.Processed;
+    }
+
+    instance.status = ContentManagerStatus.Ready;
   }
 
   /**
