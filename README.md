@@ -174,7 +174,7 @@ export const MyCustomProcessor: ContentProcessor = async (
 };
 ```
 
-Register the loader when initialising the content manager:
+Register the processor when initialising the content manager:
 
 ```ts
 ContentManager.initialise({
@@ -186,7 +186,7 @@ ContentManager.initialise({
 
 _Note: the key (in this example: `custom`) is the name of the processor._
 
-Load content assets and process them using the custom loader:
+Load content assets and process them using the custom processor:
 
 ```ts
 ContentManager.load([
