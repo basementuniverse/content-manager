@@ -89,18 +89,18 @@ export enum ContentItemType {
 }
 
 export enum ContentManagerStatus {
-  Idle = 0,
-  Loading,
-  Processing,
-  Ready
+  Idle = 'idle',
+  Loading = 'loading',
+  Processing = 'processing',
+  Ready = 'ready',
 }
 
 export enum ContentItemStatus {
-  Idle = 0,
-  Loading,
-  Loaded,
-  Processing,
-  Processed
+  Idle = 'idle',
+  Loading = 'loading',
+  Loaded = 'loaded',
+  Processing = 'processing',
+  Processed = 'processed',
 }
 
 export type ContentListItem = {

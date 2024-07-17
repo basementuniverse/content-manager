@@ -68,17 +68,17 @@ export declare enum ContentItemType {
     Text = "text"
 }
 export declare enum ContentManagerStatus {
-    Idle = 0,
-    Loading = 1,
-    Processing = 2,
-    Ready = 3
+    Idle = "idle",
+    Loading = "loading",
+    Processing = "processing",
+    Ready = "ready"
 }
 export declare enum ContentItemStatus {
-    Idle = 0,
-    Loading = 1,
-    Loaded = 2,
-    Processing = 3,
-    Processed = 4
+    Idle = "idle",
+    Loading = "loading",
+    Loaded = "loaded",
+    Processing = "processing",
+    Processed = "processed"
 }
 export type ContentListItem = {
     name: string;
