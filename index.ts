@@ -5,9 +5,7 @@ import {
   JSONLoader,
   TextLoader,
 } from './content-loaders';
-import {
-  ImageNameProcessor,
-} from './content-processors';
+import { ImageNameProcessor } from './content-processors';
 
 export type ContentManagerOptions = {
   /**
@@ -155,7 +153,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 function clamp(a: number, min = 0, max = 1) {
-  return a < min ? min : (a > max ? max : a);
+  return a < min ? min : a > max ? max : a;
 }
 
 function randomBetween(min: number, max: number) {
@@ -199,7 +197,7 @@ export default class ContentManager {
           ...(ContentManager.defaultOptions.processors ?? {}),
           ...(options?.processors ?? {}),
         },
-      },
+      }
     );
   }
 
@@ -296,10 +294,12 @@ export default class ContentManager {
       }
 
       if (instance.options.simulateSlowLoading) {
-        await sleep(randomBetween(
-          instance.options.slowLoadingTimeMin ?? MIN_SLEEP_TIME,
-          instance.options.slowLoadingTimeMax ?? MAX_SLEEP_TIME
-        ));
+        await sleep(
+          randomBetween(
+            instance.options.slowLoadingTimeMin ?? MIN_SLEEP_TIME,
+            instance.options.slowLoadingTimeMax ?? MAX_SLEEP_TIME
+          )
+        );
       }
 
       const contentItem = {
@@ -336,16 +336,16 @@ export default class ContentManager {
       if (!contentItem) {
         // We should never reach this point; the item will have been loaded
         // and added to the instance's content dictionary... but just in case
-        throw new Error(
-          `Cannot find item with name "${item.name}"`
-        );
+        throw new Error(`Cannot find item with name "${item.name}"`);
       }
 
       if (instance.options.simulateSlowProcessing) {
-        await sleep(randomBetween(
-          instance.options.slowProcessingTimeMin ?? MIN_SLEEP_TIME,
-          instance.options.slowProcessingTimeMax ?? MAX_SLEEP_TIME
-        ));
+        await sleep(
+          randomBetween(
+            instance.options.slowProcessingTimeMin ?? MIN_SLEEP_TIME,
+            instance.options.slowProcessingTimeMax ?? MAX_SLEEP_TIME
+          )
+        );
       }
 
       contentItem.status = ContentItemStatus.Processing;

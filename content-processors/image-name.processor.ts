@@ -17,10 +17,7 @@ export const ImageNameProcessor: ContentProcessor = async (
 ): Promise<void> => {
   const actualOptions = Object.assign({}, defaultOptions, options ?? {});
 
-  if (
-    typeof item.content === 'object' &&
-    item.content !== null
-  ) {
+  if (typeof item.content === 'object' && item.content !== null) {
     const processObject = (o: object) => {
       for (const key in o) {
         if (key === actualOptions.imageNameFieldName) {

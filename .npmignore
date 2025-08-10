@@ -1,6 +1,8 @@
 .editorconfig
 .gitignore
+.prettierrc
 content-loaders
+content-processors
 test
 index.ts
 tsconfig.json

@@ -1,8 +1,6 @@
 import { ContentLoader } from '../index';
 
-export const AudioLoader: ContentLoader = async (
-  url: string
-): Promise<any> => {
+export const AudioLoader: ContentLoader = async (url: string): Promise<any> => {
   return new Promise<HTMLAudioElement>((resolve, reject) => {
     const audio = new Audio(url);
     audio.addEventListener('loadeddata', () => {

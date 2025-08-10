@@ -5,12 +5,13 @@ export const TextLoader: ContentLoader = async <T = string>(
 ): Promise<T> => {
   if (urlOrText.startsWith('http')) {
     return new Promise<T>((resolve, reject) => {
-      window.fetch(urlOrText, {
-        method: 'GET',
-        headers: {
-          'content-type': 'text/plain;charset=UTF-8',
-        },
-      })
+      window
+        .fetch(urlOrText, {
+          method: 'GET',
+          headers: {
+            'content-type': 'text/plain;charset=UTF-8',
+          },
+        })
         .then(response => {
           return response.text();
         })

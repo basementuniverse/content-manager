@@ -34,10 +34,8 @@ async function processContent(contentData: ContentListItem[]) {
 
     if (
       typeof contentItem.args[0] === 'string' &&
-      (
-        contentItem.args[0].startsWith('./') ||
-        contentItem.args[0].startsWith('http://')
-      )
+      (contentItem.args[0].startsWith('./') ||
+        contentItem.args[0].startsWith('http://'))
     ) {
       let contentItemData: any;
 
@@ -51,7 +49,7 @@ async function processContent(contentData: ContentListItem[]) {
           contentItemData = await response.json();
         }
 
-      // Arg is a file path
+        // Arg is a file path
       } else {
         const data = await readFile(contentItem.args[0], 'utf8');
 
