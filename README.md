@@ -25,14 +25,24 @@ ContentManager.load([
   {
     name: 'my-item-1',
     type: 'json',
-    args: ['https://some-url.com/test.json'],
+    args: ['url:https://some-url.com/test.json'],
   },
 ]);
 ```
 
-_Note: when using the "json" or "text" loaders, the argument can either be a URL to the content or the content itself. For example:_
+_Note: when using the "json" or "text" loaders, the argument can either be a URL to the content (must start with `url:`) or the content itself. For example:_
 
 ```ts
+// This will load a JSON file via a `fetch()` call, from a URL relative to the current page:
+ContentManager.load([
+  {
+    name: 'my-item-1',
+    type: 'json',
+    args: ['url:content/data.json'],
+  },
+]);
+
+// This will use the provided object as the JSON content directly:
 ContentManager.load([
   {
     name: 'my-item-1',
@@ -41,6 +51,8 @@ ContentManager.load([
   },
 ]);
 ```
+
+Other loaders (e.g. "image", "font", "audio") always expect a URL as the first argument, so you don't need to prefix them with `url:`.
 
 Check content manager progress and status:
 ```ts
